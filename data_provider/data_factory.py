@@ -1,6 +1,6 @@
 from data_provider.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, PSMSegLoader, \
-    MSLSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader, UEAloader, GLUONTSDataset
-from data_provider.uea import collate_fn
+    MSLSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader, UEAloader, GLUONTSDataset, Dataset_TSV_Classification, TSVLoader
+from .uea import collate_fn
 import torch
 from torch.utils.data import DataLoader, Subset
 from torch.utils.data.distributed import DistributedSampler
@@ -18,6 +18,9 @@ data_dict = {
     'SMD': SMDSegLoader,
     'SWAT': SWATSegLoader,
     'UEA': UEAloader,
+    #TSV
+    'tsv_classification': Dataset_TSV_Classification,
+    'TSV': TSVLoader,
     # datasets from gluonts package:
     "gluonts": GLUONTSDataset,
 }
@@ -139,3 +142,4 @@ def data_provider(args, config, flag, ddp=False):  # args,
             sampler=DistributedSampler(data_set) if ddp else None,
             drop_last=drop_last)
         return data_set, data_loader
+    

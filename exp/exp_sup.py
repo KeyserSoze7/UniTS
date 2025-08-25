@@ -283,7 +283,7 @@ class Exp_All_Task(object):
                   pretrain_weight_path, folder=self.path)
             if 'pretrain_checkpoint.pth' in pretrain_weight_path:
                 state_dict = torch.load(
-                    pretrain_weight_path, map_location='cpu')['student']
+                    pretrain_weight_path, map_location='cpu', weights_only=False)['student']
                 ckpt = {}
                 for k, v in state_dict.items():
                     if not ('cls_prompts' in k):

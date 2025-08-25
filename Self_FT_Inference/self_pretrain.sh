@@ -8,7 +8,7 @@ d_model=64
 random_port=$((RANDOM % 9000 + 1000))
 
 # Pretrain
-CUDA_VISIBLE_DEVICES=6,7,8,9 torchrun --nnodes 1 --nproc-per-node 2 --master_port $random_port run_pretrain.py \
+CUDA_VISIBLE_DEVICES=2,3,4 torchrun --nnodes 1 --nproc-per-node 2 --master_port $random_port run_pretrain.py \
   --is_training 1 \
   --model_id $exp_name \
   --model $model_name \
@@ -30,7 +30,7 @@ CUDA_VISIBLE_DEVICES=6,7,8,9 torchrun --nnodes 1 --nproc-per-node 2 --master_por
   --min_mask_ratio 0.7 \
   --max_mask_ratio 0.8 \
   --debug $wandb_mode \
-  --task_data_config_path data_provider/multi_task_pretrain.yaml
+  --task_data_config_path data_provider/tsv_pretrain.yaml
 
 # Prompt tuning
 torchrun --nnodes 1 --master_port $random_port run.py \
@@ -54,4 +54,4 @@ torchrun --nnodes 1 --master_port $random_port run.py \
   --project_name $ptune_name \
   --clip_grad 100 \
   --pretrained_weight auto \
-  --task_data_config_path  data_provider/multi_task.yaml
+  --task_data_config_path  data_provider/tsv.yaml

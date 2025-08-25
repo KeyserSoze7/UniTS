@@ -4,40 +4,78 @@ import pandas as pd
 import torch
 
 
+# def collate_fn(data, max_len=None):
+#     """Build mini-batch tensors from a list of (X, mask) tuples. Mask input. Create
+#     Args:
+#         data: len(batch_size) list of tuples (X, y).
+#             - X: torch tensor of shape (seq_length, feat_dim); variable seq_length.
+#             - y: torch tensor of shape (num_labels,) : class indices or numerical targets
+#                 (for classification or regression, respectively). num_labels > 1 for multi-task models
+#         max_len: global fixed sequence length. Used for architectures requiring fixed length input,
+#             where the batch length cannot vary dynamically. Longer sequences are clipped, shorter are padded with 0s
+#     Returns:
+#         X: (batch_size, padded_length, feat_dim) torch tensor of masked features (input)
+#         targets: (batch_size, padded_length, feat_dim) torch tensor of unmasked features (output)
+#         target_masks: (batch_size, padded_length, feat_dim) boolean torch tensor
+#             0 indicates masked values to be predicted, 1 indicates unaffected/"active" feature values
+#         padding_masks: (batch_size, padded_length) boolean tensor, 1 means keep vector at this position, 0 means padding
+#     """
+
+#     batch_size = len(data)
+#     features, labels = zip(*data)
+
+#     # Stack and pad features and masks (convert 2D to 3D tensors, i.e. add batch dimension)
+#     lengths = [X.shape[0] for X in features]  # original sequence length for each time series
+#     if max_len is None:
+#         max_len = max(lengths)
+
+#     X = torch.zeros(batch_size, max_len, features[0].shape[-1])  # (batch_size, padded_length, feat_dim)
+#     for i in range(batch_size):
+#         end = min(lengths[i], max_len)
+#         X[i, :end, :] = features[i][:end, :]
+
+#     targets = torch.stack(labels, dim=0)  # (batch_size, num_labels)
+
+#     padding_masks = padding_mask(torch.tensor(lengths, dtype=torch.int16),
+#                                  max_len=max_len)  # (batch_size, padded_length) boolean tensor, "1" means keep
+
+#     return X, targets, padding_masks
+
+import torch
+
 def collate_fn(data, max_len=None):
-    """Build mini-batch tensors from a list of (X, mask) tuples. Mask input. Create
+    """
+    Build mini-batch tensors from a list of (X, y) tuples.
     Args:
-        data: len(batch_size) list of tuples (X, y).
-            - X: torch tensor of shape (seq_length, feat_dim); variable seq_length.
-            - y: torch tensor of shape (num_labels,) : class indices or numerical targets
-                (for classification or regression, respectively). num_labels > 1 for multi-task models
-        max_len: global fixed sequence length. Used for architectures requiring fixed length input,
-            where the batch length cannot vary dynamically. Longer sequences are clipped, shorter are padded with 0s
+        data: A list of tuples (X, y), where X is a tensor of shape (seq_length, feat_dim)
+              and y is a tensor of shape (num_labels,).
+        max_len: The maximum sequence length for padding.
     Returns:
-        X: (batch_size, padded_length, feat_dim) torch tensor of masked features (input)
-        targets: (batch_size, padded_length, feat_dim) torch tensor of unmasked features (output)
-        target_masks: (batch_size, padded_length, feat_dim) boolean torch tensor
-            0 indicates masked values to be predicted, 1 indicates unaffected/"active" feature values
-        padding_masks: (batch_size, padded_length) boolean tensor, 1 means keep vector at this position, 0 means padding
+        A tuple containing:
+        - X: A tensor of shape (batch_size, padded_length, feat_dim)
+        - targets: A tensor of shape (batch_size, num_labels)
+        - padding_masks: A boolean tensor of shape (batch_size, padded_length)
     """
 
     batch_size = len(data)
     features, labels = zip(*data)
 
-    # Stack and pad features and masks (convert 2D to 3D tensors, i.e. add batch dimension)
-    lengths = [X.shape[0] for X in features]  # original sequence length for each time series
+
+    features = [f.unsqueeze(1) if f.dim() == 1 else f for f in features]
+    
+    lengths = [X.shape[0] for X in features]
     if max_len is None:
         max_len = max(lengths)
 
-    X = torch.zeros(batch_size, max_len, features[0].shape[-1])  # (batch_size, padded_length, feat_dim)
+    X = torch.zeros(batch_size, max_len, features[0].shape[-1])
     for i in range(batch_size):
         end = min(lengths[i], max_len)
         X[i, :end, :] = features[i][:end, :]
 
-    targets = torch.stack(labels, dim=0)  # (batch_size, num_labels)
+    targets = torch.stack(labels, dim=0)
 
     padding_masks = padding_mask(torch.tensor(lengths, dtype=torch.int16),
-                                 max_len=max_len)  # (batch_size, padded_length) boolean tensor, "1" means keep
+                                 max_len=max_len)
 
     return X, targets, padding_masks
 

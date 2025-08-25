@@ -1032,3 +1032,362 @@ def context_based_split(X, is_pad, context_len: int):
     pad_by_sample = np.any(pad_new, axis=1)
 
     return Xnew[~pad_by_sample, :]
+
+
+# Add this class to handle CSV-based classification datasets
+class Dataset_CSV_Classification(Dataset):
+    def __init__(self, root_path, flag='train', size=None, timeenc=0, freq='h'):
+        assert flag in ['train', 'test', 'val']
+        self.flag = flag
+        self.root_path = root_path
+        self.all_files = glob.glob(os.path.join(root_path, flag, '*.csv'))
+        self.scaler = StandardScaler()
+        self.timeenc = timeenc
+        self.freq = freq
+        self.data, self.labels = self.__read_data__()
+
+    def __read_data__(self):
+        all_data = []
+        all_labels = []
+
+        # Read all CSV files for the specified flag (train/test/val)
+        for file_path in self.all_files:
+            df_raw = pd.read_csv(file_path)
+            # Assuming labels are encoded in the filename, e.g., 'sample_1_label_0.csv'
+            label_match = re.search(r'label_(\d+)', file_path)
+            if label_match:
+                label = int(label_match.group(1))
+                all_labels.append(label)
+            else:
+                raise ValueError("Filename does not contain label information.")
+
+            # Assuming the time series data starts from the second column
+            cols_data = df_raw.columns[1:]
+            df_data = df_raw[cols_data]
+            all_data.append(df_data.values)
+
+        # Pad sequences to the maximum length in the dataset
+        max_len = max(len(d) for d in all_data)
+        padded_data = np.zeros((len(all_data), max_len, all_data[0].shape[-1]), dtype=np.float32)
+        for i, data_series in enumerate(all_data):
+            padded_data[i, :len(data_series), :] = data_series
+
+        # Normalize the padded data
+        self.scaler.fit(padded_data.reshape(-1, padded_data.shape[-1]))
+        normalized_data = self.scaler.transform(padded_data.reshape(-1, padded_data.shape[-1])).reshape(padded_data.shape)
+
+        return torch.from_numpy(normalized_data), torch.from_numpy(np.array(all_labels))
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, index):
+        seq_x = self.data[index]
+        label = self.labels[index]
+        # In this classification task, we do not need time features
+        # The padding mask is handled internally by the model, but here's how to create one if needed:
+        # padding_mask = torch.ones_like(seq_x[:, 0], dtype=torch.bool)
+        # return seq_x, label, padding_mask
+        return seq_x, label, None # Placeholder for padding mask, model expects this
+
+
+# TSV 0 
+
+class TSVLoader(Dataset):
+    """
+    Dataset class for datasets included in:
+        Time Series Classification Archive (www.timeseriesclassification.com)
+    Argument:
+        limit_size: float in (0, 1) for debug
+    Attributes:
+        all_df: (num_samples * seq_len, num_columns) dataframe indexed by integer indices, with multiple rows corresponding to the same index (sample).
+            Each row is a time step; Each column contains either metadata (e.g. timestamp) or a feature.
+        feature_df: (num_samples * seq_len, feat_dim) dataframe; contains the subset of columns of `all_df` which correspond to selected features
+        feature_names: names of columns contained in `feature_df` (same as feature_df.columns)
+        all_IDs: (num_samples,) series of IDs contained in `all_df`/`feature_df` (same as all_df.index.unique() )
+        labels_df: (num_samples, num_labels) pd.DataFrame of label(s) for each sample
+        max_seq_len: maximum sequence (time series) length. If None, script argument `max_seq_len` will be used.
+            (Moreover, script argument overrides this attribute)
+    """
+
+    def __init__(self, root_path, file_list=None, limit_size=None, flag=None):
+        self.root_path = root_path
+        self.all_df, self.labels_df = self.load_all(
+            root_path, file_list=file_list, flag=flag)
+        # all sample IDs (integer indices 0 ... num_samples-1)
+        self.all_IDs = self.all_df.index.unique()
+
+        if limit_size is not None:
+            if limit_size > 1:
+                limit_size = int(limit_size)
+            else:  # interpret as proportion if in (0, 1]
+                limit_size = int(limit_size * len(self.all_IDs))
+            self.all_IDs = self.all_IDs[:limit_size]
+            self.all_df = self.all_df.loc[self.all_IDs]
+
+        # use all features
+        self.feature_names = self.all_df.columns
+        self.feature_df = self.all_df
+
+        # pre_process
+        normalizer = Normalizer()
+        self.feature_df = normalizer.normalize(self.feature_df)
+        # print(len(self.all_IDs))
+
+    def load_all(self, root_path, file_list=None, flag=None):
+        """
+        Loads datasets from csv files contained in `root_path` into a dataframe, optionally choosing from `pattern`
+        Args:
+            root_path: directory containing all individual .csv files
+            file_list: optionally, provide a list of file paths within `root_path` to consider.
+                Otherwise, entire `root_path` contents will be used.
+        Returns:
+            all_df: a single (possibly concatenated) dataframe with all data corresponding to specified files
+            labels_df: dataframe containing label(s) for each sample
+        """
+        # Select paths for training and evaluation
+        if file_list is None:
+            data_paths = glob.glob(os.path.join(
+                root_path, '*'))  # list of all paths
+        else:
+            data_paths = [os.path.join(root_path, p) for p in file_list]
+        if len(data_paths) == 0:
+            raise Exception('No files found using: {}'.format(
+                os.path.join(root_path, '*')))
+        if flag is not None:
+            # fix the train TRAIN bug.
+            pattern = re.compile(flag, re.IGNORECASE)
+            data_paths = list(filter(lambda x: pattern.search(x), data_paths))
+            # data_paths = list(filter(lambda x: re.search(flag, x), data_paths))
+        
+        # Corrected line to include both .ts and .tsv files
+        input_paths = [p for p in data_paths if os.path.isfile(
+            p) and (p.endswith('.ts') or p.endswith('.tsv'))]
+        if len(input_paths) == 0:
+            pattern = '*.ts or *.tsv'
+            raise Exception(
+                "No .ts or .tsv files found using pattern: '{}'".format(pattern))
+
+        all_df, labels_df = self.load_single(
+            input_paths[0])  # a single file contains dataset
+
+        return all_df, labels_df
+
+    def load_single(self, filepath):
+        if filepath.endswith('.ts'):
+            df, labels = load_from_tsfile_to_dataframe(filepath, return_separate_X_and_y=True,
+                                                    replace_missing_vals_with='NaN')
+        elif filepath.endswith('.tsv'):
+            df_raw = pd.read_csv(filepath, sep='\t', header=None)
+            
+            labels_series = df_raw.iloc[:, 0]
+            data_series = df_raw.iloc[:, 1:]
+            
+            parsed_data = []
+            for _, row in data_series.iterrows():
+                parsed_row_series = []
+                for item in row:
+                    if isinstance(item, str):
+                        if ':' in item:
+                            parsed_row_series.append([float(x.split(':')[0]) for x in item.split(',') if x])
+                        else:
+                            parsed_row_series.append([float(x) for x in item.split(',') if x])
+                    else:
+                        parsed_row_series.append([float(item)])
+                
+                parsed_data.append(parsed_row_series)
+
+            df = pd.DataFrame(data=parsed_data)
+            df.columns = df_raw.columns[1:]
+            df.index = df_raw.index
+            
+            labels = labels_series
+
+        else:
+            raise ValueError("Unsupported file format. Please use .ts or .tsv.")
+
+        # Use pd.factorize to ensure labels are zero-indexed integers
+        labels_encoded, self.class_names = pd.factorize(labels)
+        labels_df = pd.DataFrame(labels_encoded, dtype=np.int8)
+
+        lengths = df.applymap(lambda x: len(x)).values
+        horiz_diffs = np.abs(lengths - np.expand_dims(lengths[:, 0], -1))
+
+        if np.sum(horiz_diffs) > 0:
+            df = df.applymap(subsample)
+
+        lengths = df.applymap(lambda x: len(x)).values
+        vert_diffs = np.abs(lengths - np.expand_dims(lengths[0, :], 0))
+        if np.sum(vert_diffs) > 0:
+            self.max_seq_len = int(np.max(lengths[:, 0]))
+        else:
+            self.max_seq_len = lengths[0, 0]
+
+        df = pd.concat((pd.DataFrame({col: df.loc[row, col] for col in df.columns}).reset_index(drop=True).set_index(
+            pd.Series(lengths[row, 0] * [row])) for row in range(df.shape[0])), axis=0)
+
+        grp = df.groupby(by=df.index)
+        df = grp.transform(interpolate_missing)
+
+        return df, labels_df
+
+    def instance_norm(self, case):
+        # special process for numerical stability
+        if self.root_path.count('EthanolConcentration') > 0:
+            mean = case.mean(0, keepdim=True)
+            case = case - mean
+            stdev = torch.sqrt(
+                torch.var(case, dim=1, keepdim=True, unbiased=False) + 1e-5)
+            case /= stdev
+            return case
+        else:
+            return case
+
+    def __getitem__(self, ind):
+        return self.instance_norm(torch.from_numpy(self.feature_df.loc[self.all_IDs[ind]].values)), \
+            torch.from_numpy(self.labels_df.loc[self.all_IDs[ind]].values)
+
+    def __len__(self):
+        return len(self.all_IDs)
+
+
+default_dataset_writer = JsonLinesWriter()
+
+
+
+# TSV 1 
+
+class TSVLoader1(Dataset):
+    """
+    Dataset class for datasets stored in TSV format.
+    Assumes:
+        - Each row = one sample
+        - First column = label (int or str)
+        - Remaining columns = flattened time series values
+    """
+
+    def __init__(self, root_path, file_list=None, limit_size=None, flag=None):
+        self.root_path = root_path
+        self.all_df, self.labels_df = self.load_all(
+            root_path, file_list=file_list, flag=flag
+        )
+        self.all_IDs = self.all_df.index.unique()
+
+        if limit_size is not None:
+            if limit_size > 1:
+                limit_size = int(limit_size)
+            else:
+                limit_size = int(limit_size * len(self.all_IDs))
+            self.all_IDs = self.all_IDs[:limit_size]
+            self.all_df = self.all_df.loc[self.all_IDs]
+
+        # use all features
+        self.feature_names = self.all_df.columns
+        self.feature_df = self.all_df
+
+        # normalize features
+        normalizer = Normalizer()
+        self.feature_df = normalizer.normalize(self.feature_df)
+
+    def load_all(self, root_path, file_list=None, flag=None):
+        if file_list is None:
+            data_paths = glob.glob(os.path.join(root_path, "*.tsv"))
+        else:
+            data_paths = [os.path.join(root_path, p) for p in file_list]
+
+        if len(data_paths) == 0:
+            raise Exception(f"No .tsv files found in {root_path}")
+
+        # For now assume only one file per dataset
+        all_df, labels_df = self.load_single(data_paths[0])
+        return all_df, labels_df
+
+    def load_single(self, filepath):
+        df = pd.read_csv(filepath, sep="\t")
+
+        # Assume first column is label
+        labels = df.iloc[:, 0].astype("category")
+        self.class_names = labels.cat.categories
+        labels_df = pd.DataFrame(labels.cat.codes, dtype=np.int8)
+
+        # Remaining columns are features
+        features = df.iloc[:, 1:]
+
+        # (num_samples * seq_len, feat_dim) format
+        # reshape into long format like UEAloader
+        num_samples = features.shape[0]
+        seq_len = features.shape[1]
+        feat_dim = 1
+
+        reshaped = pd.concat(
+            (pd.DataFrame({"value": features.iloc[row, :].values}).reset_index(drop=True).set_index(
+                pd.Series(seq_len * [row])
+            ) for row in range(num_samples)), axis=0
+        )
+
+        reshaped.columns = ["feat0"]
+
+        return reshaped, labels_df
+
+    def __getitem__(self, ind):
+        return (
+            self.instance_norm(torch.from_numpy(self.feature_df.loc[self.all_IDs[ind]].values)),
+            torch.from_numpy(self.labels_df.loc[self.all_IDs[ind]].values),
+        )
+
+    def __len__(self):
+        return len(self.all_IDs)
+
+    def instance_norm(self, case):
+        mean = case.mean(0, keepdim=True)
+        stdev = torch.sqrt(torch.var(case, dim=0, keepdim=True, unbiased=False) + 1e-5)
+        return (case - mean) / stdev
+
+
+
+# TSV 2
+# Add this class to handle TSV-based classification datasets
+class Dataset_TSV_Classification(Dataset):
+    def __init__(self, root_path, flag='train', size=None, timeenc=0, freq='h', data_path=''):
+        assert flag in ['train', 'test', 'val']
+        self.flag = flag
+        self.root_path = root_path
+        self.data_path = data_path
+        self.scaler = StandardScaler()
+        # Data and labels are read and processed in __read_data__
+        self.data, self.labels = self.__read_data__()
+
+    def __read_data__(self):
+        # Load the training data to fit the scaler, regardless of the current flag.
+        train_filename = self.data_path + '_TRAIN.tsv'
+        train_path = os.path.join(self.root_path, train_filename)
+        df_train_raw = pd.read_csv(train_path, sep='\t', header=None)
+        train_data = df_train_raw.iloc[:, 1:].values
+        train_data = train_data[:, :, np.newaxis]
+        self.scaler.fit(train_data.reshape(-1, train_data.shape[-1]))
+
+        # Now, load the data for the current flag (train, test, or val).
+        if self.flag == 'train':
+            file_path = train_path
+        else:  # 'test' and 'val' flags will use the test file
+            test_filename = self.data_path + '_TEST.tsv'
+            file_path = os.path.join(self.root_path, test_filename)
+
+        # Read the TSV file for the current split
+        df_raw = pd.read_csv(file_path, sep='\t', header=None)
+        all_labels = df_raw.iloc[:, 0].values.astype(int)
+        data = df_raw.iloc[:, 1:].values
+        data = data[:, :, np.newaxis]
+
+        # Transform the current data split using the fitted scaler.
+        normalized_data = self.scaler.transform(data.reshape(-1, data.shape[-1])).reshape(data.shape)
+
+        return torch.from_numpy(normalized_data), torch.from_numpy(all_labels)
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, index):
+        seq_x = self.data[index]
+        label = self.labels[index]
+        return seq_x, label

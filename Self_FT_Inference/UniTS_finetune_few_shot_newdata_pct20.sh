@@ -1,5 +1,5 @@
 model_name=UniTS
-wandb_mode=online
+wandb_mode=disabled 
 project_name=fewshot_newdata
 exp_name=fewshot_newdata_finetune_pct20
 random_port=$((RANDOM % 9000 + 1000))
@@ -7,7 +7,7 @@ random_port=$((RANDOM % 9000 + 1000))
 # get supervised checkpoint: scripts/supervised/UniTS_supervised_x64.sh
 ckpt_path=/media/RTCIN9TBA/Interns/RDT1/ibl3kor/UniTS/checkpoints/units_x64_supervised_checkpoint.pth
 torchrun --nnodes 1 --master_port $random_port run.py \
-  --is_training 1 \
+  --is_training 0 \
   --fix_seed 2021 \
   --model_id $exp_name \
   --subsample_pct 0.20 \

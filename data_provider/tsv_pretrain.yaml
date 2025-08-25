@@ -1,0 +1,68 @@
+# data_provider/my_coffee_dodger_classification.yaml
+task_dataset:
+  cls_coffee:
+    task_name: pretrain_classification
+    dataset: Coffee
+    data: TSV
+    embed: timeF
+    root_path: classCSV/UCRArchive_2018/Coffee
+    data_path: Coffee
+    seq_len: 286
+    label_len: 0
+    pred_len: 0
+    enc_in: 1
+    num_class: 2
+    c_out: None
+
+  cls_dodger:
+    task_name: pretrain_classification
+    dataset: DodgerLoopDay
+    data: TSV
+    embed: timeF
+    root_path: classCSV/UCRArchive_2018/DodgerLoopDay
+    data_path: DodgerLoopDay
+    seq_len: 286
+    label_len: 0
+    pred_len: 0
+    enc_in: 1
+    num_class: 7
+    c_out: None
+
+  CLS_ECG5000:
+    task_name: pretrain_classification
+    dataset: ECG5000
+    data: TSV
+    embed: timeF
+    root_path: classCSV/UCRArchive_2018/ECG5000
+    seq_len: 140
+    label_len: 0
+    pred_len: 0
+    enc_in: 1
+    num_class: 5
+    c_out: None
+
+  CLS_Fish:
+    task_name: pretrain_classification
+    dataset: Fish
+    data: TSV
+    embed: timeF
+    root_path: classCSV/UCRArchive_2018/Fish
+    seq_len: 463
+    label_len: 0
+    pred_len: 0
+    enc_in: 1
+    num_class: 7
+    c_out: None
+
+  CLS_Ham:
+    task_name: pretrain_classification
+    dataset: Ham
+    data: TSV
+    embed: timeF
+    root_path: classCSV/UCRArchive_2018/Ham
+    seq_len: 431
+    label_len: 0
+    pred_len: 0
+    enc_in: 1
+    num_class: 2
+    c_out: None
