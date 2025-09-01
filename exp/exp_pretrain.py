@@ -94,7 +94,7 @@ class Exp_All_Task(object):
         data_loader_list = []
         for task_data_name, task_config in self.task_data_config.items():
             print("loading dataset:", task_data_name, folder=self.path)
-            if task_config['data'] == 'UEA' and flag == 'val':
+            if task_config['data'] == 'TSV' and flag == 'val':
                 # TODO strange that no val set is used for classification. Set to test set for val
                 flag = 'test'
             data_set, data_loader = data_provider(

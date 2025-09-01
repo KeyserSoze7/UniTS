@@ -41,8 +41,6 @@ import torch
 
 #     return X, targets, padding_masks
 
-import torch
-
 def collate_fn(data, max_len=None):
     """
     Build mini-batch tensors from a list of (X, y) tuples.

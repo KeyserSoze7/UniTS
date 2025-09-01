@@ -1,0 +1,239 @@
+_wandb:
+    value:
+        cli_version: 0.21.0
+        e:
+            tbpo0i29c1638yyonahwy93bursdgkx5:
+                args:
+                    - --is_training
+                    - "1"
+                    - --model_id
+                    - UniTS_pretrain_x64
+                    - --model
+                    - UniTS
+                    - --lradj
+                    - prompt_tuning
+                    - --prompt_num
+                    - "10"
+                    - --patch_len
+                    - "16"
+                    - --stride
+                    - "16"
+                    - --e_layers
+                    - "3"
+                    - --d_model
+                    - "64"
+                    - --des
+                    - Exp
+                    - --itr
+                    - "1"
+                    - --learning_rate
+                    - "3e-3"
+                    - --weight_decay
+                    - "0"
+                    - --prompt_tune_epoch
+                    - "2"
+                    - --train_epochs
+                    - "0"
+                    - --acc_it
+                    - "32"
+                    - --debug
+                    - online
+                    - --project_name
+                    - prompt_tuning
+                    - --clip_grad
+                    - "100"
+                    - --pretrained_weight
+                    - auto
+                    - --task_data_config_path
+                    - data_provider/multi_task.yaml
+                codePath: run.py
+                codePathLocal: run.py
+                cpu_count: 32
+                cpu_count_logical: 64
+                cudaVersion: "12.8"
+                disk:
+                    /:
+                        total: "469875433472"
+                        used: "439870386176"
+                email: adityasrirambarnala@gmail.com
+                executable: /media/RTCIN9TBA/Interns/RDT1/ibl3kor/.cache/py311env/bin/python3.11
+                git:
+                    commit: 0e0281482864017cac8832b2651906ff5375a34e
+                    remote: https://github.com/KeyserSoze7/UniTS.git
+                gpu: Quadro RTX 5000
+                gpu_count: 10
+                gpu_nvidia:
+                    - architecture: Turing
+                      cudaCores: 3072
+                      memoryTotal: "17179869184"
+                      name: Quadro RTX 5000
+                      uuid: GPU-c56084e7-50a3-f812-8a11-9d830b920893
+                    - architecture: Turing
+                      cudaCores: 3072
+                      memoryTotal: "17179869184"
+                      name: Quadro RTX 5000
+                      uuid: GPU-e5ebb470-3cf2-3891-73ec-acee04b58c46
+                    - architecture: Turing
+                      cudaCores: 3072
+                      memoryTotal: "17179869184"
+                      name: Quadro RTX 5000
+                      uuid: GPU-02dd6e88-d9a1-b3c1-c4f7-0af93b214ad5
+                    - architecture: Turing
+                      cudaCores: 3072
+                      memoryTotal: "17179869184"
+                      name: Quadro RTX 5000
+                      uuid: GPU-d9683891-57e7-8d87-343e-31e4cd7bbab5
+                    - architecture: Turing
+                      cudaCores: 3072
+                      memoryTotal: "17179869184"
+                      name: Quadro RTX 5000
+                      uuid: GPU-b6c3d306-623d-3702-2f41-efce7eaedcc3
+                    - architecture: Turing
+                      cudaCores: 3072
+                      memoryTotal: "17179869184"
+                      name: Quadro RTX 5000
+                      uuid: GPU-2d66640f-45e0-41fb-4d0f-7d415759469d
+                    - architecture: Turing
+                      cudaCores: 3072
+                      memoryTotal: "17179869184"
+                      name: Quadro RTX 5000
+                      uuid: GPU-1cf53256-af97-03d5-f82d-2e59a4c601d2
+                    - architecture: Turing
+                      cudaCores: 3072
+                      memoryTotal: "17179869184"
+                      name: Quadro RTX 5000
+                      uuid: GPU-50739236-0292-50bd-ab15-8100b6282620
+                    - architecture: Turing
+                      cudaCores: 3072
+                      memoryTotal: "17179869184"
+                      name: Quadro RTX 5000
+                      uuid: GPU-a8902283-2198-7ae2-8340-40d906d81040
+                    - architecture: Turing
+                      cudaCores: 3072
+                      memoryTotal: "17179869184"
+                      name: Quadro RTX 5000
+                      uuid: GPU-533c831b-0f11-2e33-408f-fc45d864a6df
+                host: kordeptrtc1
+                memory:
+                    total: "540655050752"
+                os: Linux-5.15.0-131-generic-x86_64-with-glibc2.31
+                program: /media/RTCIN9TBA/Interns/RDT1/ibl3kor/UniTS/run.py
+                python: CPython 3.11.13
+                root: /media/RTCIN9TBA/Interns/RDT1/ibl3kor/UniTS
+                startedAt: "2025-08-23T17:32:09.801226Z"
+                writerId: tbpo0i29c1638yyonahwy93bursdgkx5
+        m: []
+        python_version: 3.11.13
+        t:
+            "1":
+                - 1
+                - 5
+                - 53
+            "2":
+                - 1
+                - 5
+                - 41
+                - 49
+                - 53
+                - 63
+            "3":
+                - 13
+                - 16
+            "4": 3.11.13
+            "5": 0.21.0
+            "12": 0.21.0
+            "13": linux-x86_64
+acc_it:
+    value: 32
+anomaly_ratio:
+    value: 1
+batch_size:
+    value: 32
+checkpoints:
+    value: ./checkpoints/
+clip_grad:
+    value: 100
+d_model:
+    value: 64
+data:
+    value: All
+debug:
+    value: online
+des:
+    value: Exp
+dist_url:
+    value: env://
+dropout:
+    value: 0.1
+e_layers:
+    value: 3
+features:
+    value: M
+fix_seed:
+    value: null
+freq:
+    value: h
+inverse:
+    value: false
+is_training:
+    value: 1
+itr:
+    value: 1
+large_model:
+    value: true
+layer_decay:
+    value: null
+learning_rate:
+    value: 0.003
+local_rank:
+    value: null
+lradj:
+    value: prompt_tuning
+mask_rate:
+    value: 0.25
+max_offset:
+    value: 0
+memory_check:
+    value: true
+min_lr:
+    value: null
+model:
+    value: UniTS
+model_id:
+    value: UniTS_pretrain_x64
+n_heads:
+    value: 8
+num_workers:
+    value: 0
+offset:
+    value: 0
+patch_len:
+    value: 16
+pretrained_weight:
+    value: auto
+project_name:
+    value: prompt_tuning
+prompt_num:
+    value: 10
+prompt_tune_epoch:
+    value: 2
+share_embedding:
+    value: false
+stride:
+    value: 16
+subsample_pct:
+    value: null
+target:
+    value: OT
+task_data_config_path:
+    value: data_provider/multi_task.yaml
+task_name:
+    value: ALL_task
+train_epochs:
+    value: 0
+warmup_epochs:
+    value: 0
+weight_decay:
+    value: 0
+zero_shot_forecasting_new_length:
+    value: null

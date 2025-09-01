@@ -14,20 +14,6 @@ task_dataset:
     num_class: 2
     c_out: None
 
-  cls_dodger:
-    task_name: classification
-    dataset: DodgerLoopDay
-    data: TSV
-    embed: timeF
-    root_path: classCSV/UCRArchive_2018/DodgerLoopDay
-    data_path: DodgerLoopDay
-    seq_len: 286
-    label_len: 0
-    pred_len: 0
-    enc_in: 1
-    num_class: 7
-    c_out: None
-
   CLS_ECG5000:
     task_name: classification
     dataset: ECG5000

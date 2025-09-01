@@ -1,12 +1,12 @@
 from data_provider.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, PSMSegLoader, \
-    MSLSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader, UEAloader, GLUONTSDataset, Dataset_TSV_Classification, TSVLoader
+    MSLSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader, UEAloader, GLUONTSDataset, Dataset_TSV_Classification, TSVLoader, CSVLoader
 from .uea import collate_fn
 import torch
 from torch.utils.data import DataLoader, Subset
 from torch.utils.data.distributed import DistributedSampler
 
 data_dict = {
-    'ETTh1': Dataset_ETT_hour,
+    'ETTh1': Dataset_ETT_hour, 
     'ETTh2': Dataset_ETT_hour,
     'ETTm1': Dataset_ETT_minute,
     'ETTm2': Dataset_ETT_minute,
@@ -21,6 +21,7 @@ data_dict = {
     #TSV
     'tsv_classification': Dataset_TSV_Classification,
     'TSV': TSVLoader,
+    'CSV': CSVLoader,
     # datasets from gluonts package:
     "gluonts": GLUONTSDataset,
 }

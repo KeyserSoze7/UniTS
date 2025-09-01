@@ -1255,6 +1255,171 @@ default_dataset_writer = JsonLinesWriter()
 
 
 
+# CSV loaders 
+
+class CSVLoader(Dataset):
+    """
+    Dataset class for datasets included in:
+        Time Series Classification Archive (www.timeseriesclassification.com)
+    Argument:
+        limit_size: float in (0, 1) for debug
+    Attributes:
+        all_df: (num_samples * seq_len, num_columns) dataframe indexed by integer indices, with multiple rows corresponding to the same index (sample).
+            Each row is a time step; Each column contains either metadata (e.g. timestamp) or a feature.
+        feature_df: (num_samples * seq_len, feat_dim) dataframe; contains the subset of columns of `all_df` which correspond to selected features
+        feature_names: names of columns contained in `feature_df` (same as feature_df.columns)
+        all_IDs: (num_samples,) series of IDs contained in `all_df`/`feature_df` (same as all_df.index.unique() )
+        labels_df: (num_samples, num_labels) pd.DataFrame of label(s) for each sample
+        max_seq_len: maximum sequence (time series) length. If None, script argument `max_seq_len` will be used.
+            (Moreover, script argument overrides this attribute)
+    """
+
+    def __init__(self, root_path, file_list=None, limit_size=None, flag=None):
+        self.root_path = root_path
+        self.all_df, self.labels_df = self.load_all(
+            root_path, file_list=file_list, flag=flag)
+        # all sample IDs (integer indices 0 ... num_samples-1)
+        self.all_IDs = self.all_df.index.unique()
+
+        if limit_size is not None:
+            if limit_size > 1:
+                limit_size = int(limit_size)
+            else:  # interpret as proportion if in (0, 1]
+                limit_size = int(limit_size * len(self.all_IDs))
+            self.all_IDs = self.all_IDs[:limit_size]
+            self.all_df = self.all_df.loc[self.all_IDs]
+
+        # use all features
+        self.feature_names = self.all_df.columns
+        self.feature_df = self.all_df
+
+        # pre_process
+        normalizer = Normalizer()
+        self.feature_df = normalizer.normalize(self.feature_df)
+        # print(len(self.all_IDs))
+
+    def load_all(self, root_path, file_list=None, flag=None):
+        """
+        Loads datasets from csv files contained in `root_path` into a dataframe, optionally choosing from `pattern`
+        Args:
+            root_path: directory containing all individual .csv files
+            file_list: optionally, provide a list of file paths within `root_path` to consider.
+                Otherwise, entire `root_path` contents will be used.
+        Returns:
+            all_df: a single (possibly concatenated) dataframe with all data corresponding to specified files
+            labels_df: dataframe containing label(s) for each sample
+        """
+        # Select paths for training and evaluation
+        if file_list is None:
+            data_paths = glob.glob(os.path.join(
+                root_path, '*'))  # list of all paths
+        else:
+            data_paths = [os.path.join(root_path, p) for p in file_list]
+        if len(data_paths) == 0:
+            raise Exception('No files found using: {}'.format(
+                os.path.join(root_path, '*')))
+        if flag is not None:
+            # fix the train TRAIN bug.
+            pattern = re.compile(flag, re.IGNORECASE)
+            data_paths = list(filter(lambda x: pattern.search(x), data_paths))
+            # data_paths = list(filter(lambda x: re.search(flag, x), data_paths))
+
+        # Corrected line to include both .ts and .csv files
+        input_paths = [p for p in data_paths if os.path.isfile(
+            p) and (p.endswith('.ts') or p.endswith('.csv'))]
+        if len(input_paths) == 0:
+            pattern = '*.ts or *.csv'
+            raise Exception(
+                "No .ts or .csv files found using pattern: '{}'".format(pattern))
+
+        all_df, labels_df = self.load_single(
+            input_paths[0])  # a single file contains dataset
+
+        return all_df, labels_df
+
+    def load_single(self, filepath):
+        if filepath.endswith('.ts'):
+            df, labels = load_from_tsfile_to_dataframe(filepath, return_separate_X_and_y=True,
+                                                       replace_missing_vals_with='NaN')
+        elif filepath.endswith('.csv'):
+            # The only change here is using pd.read_csv without a separator argument,
+            # as it defaults to a comma.
+            df_raw = pd.read_csv(filepath, header=None)
+
+            labels_series = df_raw.iloc[:, 0]
+            data_series = df_raw.iloc[:, 1:]
+
+            parsed_data = []
+            for _, row in data_series.iterrows():
+                parsed_row_series = []
+                for item in row:
+                    if isinstance(item, str):
+                        if ':' in item:
+                            parsed_row_series.append([float(x.split(':')[0]) for x in item.split(',') if x])
+                        else:
+                            parsed_row_series.append([float(x) for x in item.split(',') if x])
+                    else:
+                        parsed_row_series.append([float(item)])
+
+                parsed_data.append(parsed_row_series)
+
+            df = pd.DataFrame(data=parsed_data)
+            df.columns = df_raw.columns[1:]
+            df.index = df_raw.index
+
+            labels = labels_series
+
+        else:
+            raise ValueError("Unsupported file format. Please use .ts or .csv.")
+
+        # Use pd.factorize to ensure labels are zero-indexed integers
+        labels_encoded, self.class_names = pd.factorize(labels)
+        labels_df = pd.DataFrame(labels_encoded, dtype=np.int8)
+
+        lengths = df.applymap(lambda x: len(x)).values
+        horiz_diffs = np.abs(lengths - np.expand_dims(lengths[:, 0], -1))
+
+        if np.sum(horiz_diffs) > 0:
+            df = df.applymap(subsample)
+
+        lengths = df.applymap(lambda x: len(x)).values
+        vert_diffs = np.abs(lengths - np.expand_dims(lengths[0, :], 0))
+        if np.sum(vert_diffs) > 0:
+            self.max_seq_len = int(np.max(lengths[:, 0]))
+        else:
+            self.max_seq_len = lengths[0, 0]
+
+        df = pd.concat((pd.DataFrame({col: df.loc[row, col] for col in df.columns}).reset_index(drop=True).set_index(
+            pd.Series(lengths[row, 0] * [row])) for row in range(df.shape[0])), axis=0)
+
+        grp = df.groupby(by=df.index)
+        df = grp.transform(interpolate_missing)
+
+        return df, labels_df
+
+    def instance_norm(self, case):
+        # special process for numerical stability
+        if self.root_path.count('EthanolConcentration') > 0:
+            mean = case.mean(0, keepdim=True)
+            case = case - mean
+            stdev = torch.sqrt(
+                torch.var(case, dim=1, keepdim=True, unbiased=False) + 1e-5)
+            case /= stdev
+            return case
+        else:
+            return case
+
+    def __getitem__(self, ind):
+        return self.instance_norm(torch.from_numpy(self.feature_df.loc[self.all_IDs[ind]].values)), \
+               torch.from_numpy(self.labels_df.loc[self.all_IDs[ind]].values)
+
+    def __len__(self):
+        return len(self.all_IDs)
+
+
+
+
+
 # TSV 1 
 
 class TSVLoader1(Dataset):

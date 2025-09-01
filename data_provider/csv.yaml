@@ -1,11 +1,11 @@
 # data_provider/my_coffee_dodger_classification.yaml
 task_dataset:
   cls_coffee:
-    task_name: pretrain_classification
+    task_name: classification
     dataset: Coffee
-    data: TSV
+    data: CSV
     embed: timeF
-    root_path: classCSV/UCRArchive_2018/Coffee
+    root_path: DataCSV/Coffee
     data_path: Coffee
     seq_len: 286
     label_len: 0
@@ -14,13 +14,12 @@ task_dataset:
     num_class: 2
     c_out: None
 
-
   CLS_ECG5000:
-    task_name: pretrain_classification
+    task_name: classification
     dataset: ECG5000
-    data: TSV
+    data: CSV
     embed: timeF
-    root_path: classCSV/UCRArchive_2018/ECG5000
+    root_path: DataCSV/ECG5000
     seq_len: 140
     label_len: 0
     pred_len: 0
@@ -29,11 +28,11 @@ task_dataset:
     c_out: None
 
   CLS_Fish:
-    task_name: pretrain_classification
+    task_name: classification
     dataset: Fish
-    data: TSV
+    data: CSV
     embed: timeF
-    root_path: classCSV/UCRArchive_2018/Fish
+    root_path: DataCSV/Fish
     seq_len: 463
     label_len: 0
     pred_len: 0
@@ -42,11 +41,11 @@ task_dataset:
     c_out: None
 
   CLS_Ham:
-    task_name: pretrain_classification
+    task_name: classification
     dataset: Ham
-    data: TSV
+    data: CSV
     embed: timeF
-    root_path: classCSV/UCRArchive_2018/Ham
+    root_path: DataCSV/Ham
     seq_len: 431
     label_len: 0
     pred_len: 0

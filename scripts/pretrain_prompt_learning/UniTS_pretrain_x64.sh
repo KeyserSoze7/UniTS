@@ -8,7 +8,7 @@ d_model=64
 random_port=$((RANDOM % 9000 + 1000))
 
 # Pretrain
-CUDA_VISIBLE_DEVICES=6,7,8,9 torchrun --nnodes 1 --nproc-per-node 2 --master_port $random_port run_pretrain.py \
+CUDA_VISIBLE_DEVICES=9 torchrun --nnodes 1 --nproc-per-node 1 --master_port $random_port run_pretrain.py \
   --is_training 1 \
   --model_id $exp_name \
   --model $model_name \

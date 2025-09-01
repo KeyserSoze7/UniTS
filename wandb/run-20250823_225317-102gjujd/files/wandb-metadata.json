@@ -1,0 +1,149 @@
+{
+  "os":  "Linux-5.15.0-131-generic-x86_64-with-glibc2.31",
+  "python":  "CPython 3.11.13",
+  "startedAt":  "2025-08-23T17:23:17.627460Z",
+  "args":  [
+    "--is_training",
+    "1",
+    "--model_id",
+    "UniTS_pretrain_x64",
+    "--model",
+    "UniTS",
+    "--prompt_num",
+    "10",
+    "--patch_len",
+    "16",
+    "--stride",
+    "16",
+    "--e_layers",
+    "3",
+    "--d_model",
+    "64",
+    "--des",
+    "Exp",
+    "--acc_it",
+    "128",
+    "--batch_size",
+    "32",
+    "--learning_rate",
+    "5e-5",
+    "--min_lr",
+    "1e-4",
+    "--weight_decay",
+    "5e-6",
+    "--train_epochs",
+    "10",
+    "--warmup_epochs",
+    "0",
+    "--min_keep_ratio",
+    "0.5",
+    "--right_prob",
+    "0.5",
+    "--min_mask_ratio",
+    "0.7",
+    "--max_mask_ratio",
+    "0.8",
+    "--debug",
+    "online",
+    "--task_data_config_path",
+    "data_provider/multi_task_pretrain.yaml"
+  ],
+  "program":  "/media/RTCIN9TBA/Interns/RDT1/ibl3kor/UniTS/run_pretrain.py",
+  "codePath":  "run_pretrain.py",
+  "codePathLocal":  "run_pretrain.py",
+  "git":  {
+    "remote":  "https://github.com/KeyserSoze7/UniTS.git",
+    "commit":  "0e0281482864017cac8832b2651906ff5375a34e"
+  },
+  "email":  "adityasrirambarnala@gmail.com",
+  "root":  "/media/RTCIN9TBA/Interns/RDT1/ibl3kor/UniTS",
+  "host":  "kordeptrtc1",
+  "executable":  "/media/RTCIN9TBA/Interns/RDT1/ibl3kor/.cache/py311env/bin/python3.11",
+  "cpu_count":  32,
+  "cpu_count_logical":  64,
+  "gpu":  "Quadro RTX 5000",
+  "gpu_count":  10,
+  "disk":  {
+    "/":  {
+      "total":  "469875433472",
+      "used":  "439861170176"
+    }
+  },
+  "memory":  {
+    "total":  "540655050752"
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "Quadro RTX 5000",
+      "memoryTotal":  "17179869184",
+      "cudaCores":  3072,
+      "architecture":  "Turing",
+      "uuid":  "GPU-c56084e7-50a3-f812-8a11-9d830b920893"
+    },
+    {
+      "name":  "Quadro RTX 5000",
+      "memoryTotal":  "17179869184",
+      "cudaCores":  3072,
+      "architecture":  "Turing",
+      "uuid":  "GPU-e5ebb470-3cf2-3891-73ec-acee04b58c46"
+    },
+    {
+      "name":  "Quadro RTX 5000",
+      "memoryTotal":  "17179869184",
+      "cudaCores":  3072,
+      "architecture":  "Turing",
+      "uuid":  "GPU-02dd6e88-d9a1-b3c1-c4f7-0af93b214ad5"
+    },
+    {
+      "name":  "Quadro RTX 5000",
+      "memoryTotal":  "17179869184",
+      "cudaCores":  3072,
+      "architecture":  "Turing",
+      "uuid":  "GPU-d9683891-57e7-8d87-343e-31e4cd7bbab5"
+    },
+    {
+      "name":  "Quadro RTX 5000",
+      "memoryTotal":  "17179869184",
+      "cudaCores":  3072,
+      "architecture":  "Turing",
+      "uuid":  "GPU-b6c3d306-623d-3702-2f41-efce7eaedcc3"
+    },
+    {
+      "name":  "Quadro RTX 5000",
+      "memoryTotal":  "17179869184",
+      "cudaCores":  3072,
+      "architecture":  "Turing",
+      "uuid":  "GPU-2d66640f-45e0-41fb-4d0f-7d415759469d"
+    },
+    {
+      "name":  "Quadro RTX 5000",
+      "memoryTotal":  "17179869184",
+      "cudaCores":  3072,
+      "architecture":  "Turing",
+      "uuid":  "GPU-1cf53256-af97-03d5-f82d-2e59a4c601d2"
+    },
+    {
+      "name":  "Quadro RTX 5000",
+      "memoryTotal":  "17179869184",
+      "cudaCores":  3072,
+      "architecture":  "Turing",
+      "uuid":  "GPU-50739236-0292-50bd-ab15-8100b6282620"
+    },
+    {
+      "name":  "Quadro RTX 5000",
+      "memoryTotal":  "17179869184",
+      "cudaCores":  3072,
+      "architecture":  "Turing",
+      "uuid":  "GPU-a8902283-2198-7ae2-8340-40d906d81040"
+    },
+    {
+      "name":  "Quadro RTX 5000",
+      "memoryTotal":  "17179869184",
+      "cudaCores":  3072,
+      "architecture":  "Turing",
+      "uuid":  "GPU-533c831b-0f11-2e33-408f-fc45d864a6df"
+    }
+  ],
+  "cudaVersion":  "12.8",
+  "writerId":  "kbmzg9iaywedbq42btuph8lbtj1ovh79"
+}
